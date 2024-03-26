@@ -1,9 +1,23 @@
 import database from 'infra/database.js'
 
 async function status(request, response) {
-  const result = await database.query('SELECT 1 + 1 as sum')
-  console.log(result.rows)
-  response.status(200).json({ chave: 'Ok' })
+  const updatedAt = new Date().toISOString()
+  const postgresVersion = await database.query({
+    text: 'SELECT version()'
+  })
+  const maxConnections = await database.query({
+    text: 'SHOW max_connections'
+  })
+  const usedConnections = await database.query({
+    text: 'SELECT count(*) FROM pg_stat_activity'
+  })
+
+  response.status(200).json({
+    updated_at: updatedAt,
+    postgres_version: postgresVersion,
+    max_connections: maxConnections,
+    used_connections: usedConnections
+  })
 }
 
 export default status
